@@ -17,6 +17,7 @@ class ConfigService:
                 'twitch_text_channel_id' : 'your twitch live alert',
                 'youtube_text_channel_id' : 'your youtube live alert',
                 'twitch_api_key' : 'your twitch api key',
+                'twitch_client_id' : 'your twitch client id',
                 'youtube_api_key' : 'your youtube api key'
             }
             yaml.dump(config,f)
@@ -45,6 +46,9 @@ class ConfigService:
     
     def getTwitchApiKey(self):
         return self.config['twitch_api_key']
+    
+    def getTwitchClientId(self):
+        return self.config['twitch_client_id']
     
     def getYoutubeApiKey(self):
         return self.config['youtube_api_key']
@@ -75,6 +79,10 @@ class ConfigService:
 
     def setTwitchApiKey(self,apiKey):
         self.config['twitch_api_key'] = apiKey
+        self.saveConfig()
+
+    def setTwitchClientId(self,clientId):
+        self.config['twitch_client_id'] = clientId
         self.saveConfig()
 
     def setYoutubeApiKey(self,apiKey):

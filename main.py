@@ -32,15 +32,15 @@ async def on_ready():
     
 @bot.tree.command(name='live',description='Savoir si Wiibleyde est en live')
 async def live(interaction: discord.Interaction):
-    twitchService = TwitchService(configService.getTwitchApiKey(),configService.getTwitchChannel())
-    if twitchService.isChannelLive():
+    twitchService = TwitchService()
+    if twitchService.checkIfUserIsStreaming():
         embed = discord.Embed(title="Wiibleyde est en live !")
         embed.add_field(name="Lien",value=f"https://www.twitch.tv/{configService.getTwitchChannel()}")
-        embed.add_field(name="Titre",value=twitchService.getChannelLiveTitle())
-        embed.add_field(name="Jeu",value=twitchService.getChannelLiveGame())
-        embed.add_field(name="Viewers",value=twitchService.getChannelLiveViewers())
-        embed.set_thumbnail(url=twitchService.getChannelLiveThumbnail())
-        embed.set_image(url=twitchService.getChannelLivePreview())
+        embed.add_field(name="Titre",value=twitchService.getStreamTitle())
+        embed.add_field(name="Jeu",value=twitchService.getStreamGame())
+        embed.add_field(name="Viewers",value=twitchService.getStreamViewers())
+        embed.set_thumbnail(url=twitchService.getStreamThumbnail())
+        embed.set_image(url=twitchService.getStreamPreview())
         embed.set_footer(text="Wiibleyde est en live !")
         await interaction.response.send_message(embed=embed,ephemeral=True)
     else:
@@ -55,14 +55,14 @@ async def isOnLive():
         varSaver.saveVar('liveSend',True)
         embed = discord.Embed(title="Wiibleyde est en live !")
         embed.add_field(name="Lien",value=f"https://www.twitch.tv/{configService.getTwitchChannel()}")
-        embed.add_field(name="Titre",value=twitchService.getChannelLiveTitle())
-        embed.add_field(name="Jeu",value=twitchService.getChannelLiveGame())
-        embed.add_field(name="Viewers",value=twitchService.getChannelLiveViewers())
-        embed.set_thumbnail(url=twitchService.getChannelLiveThumbnail())
-        embed.set_image(url=twitchService.getChannelLivePreview())
+        embed.add_field(name="Titre",value=twitchService.getStreamTitle())
+        embed.add_field(name="Jeu",value=twitchService.getStreamGame())
+        embed.add_field(name="Viewers",value=twitchService.getStreamViewers())
+        embed.set_thumbnail(url=twitchService.getStreamThumbnail())
+        embed.set_image(url=twitchService.getStreamPreview())
         embed.set_footer(text="Wiibleyde est en live !")
         await bot.get_channel(configService.getTwitchTextChannelId()).send(embed=embed)
-        await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name="Wiibleyde"))
+        await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name="Wiibleyde online !"))
     else:
         if not varSaver.getVar('liveSend'):
             return
