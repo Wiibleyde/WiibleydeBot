@@ -1,9 +1,9 @@
 import datetime
 
 class LoggerService:
-    def __init__(self,filename,debug:bool):
+    def __init__(self,filename,debugMode:bool):
         self.filename = filename
-        self.debug = debug
+        self.debugMode = debugMode
         self.file = open(filename,'a')
         self.file.close()
 
@@ -31,9 +31,9 @@ class LoggerService:
         self.file.write(line+'\n')
         self.file.close()
 
-    def debug(self,message):
+    def showDebug(self,message):
         line = f"[{self.getDate()}] [DEBUG] : {message}"
-        if self.debug:
+        if self.debugMode:
             print(line)
         self.file = open(self.filename,'a')
         self.file.write(line+'\n')

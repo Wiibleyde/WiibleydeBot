@@ -24,11 +24,13 @@ async def on_ready():
     await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name="Starting..."))
     try:
         synced = await bot.tree.sync()
-        loggerService.debug(f"Synced {len(synced)} commands")
-        loggerService.debug(f"Commands: {synced}")
-        isOnLive.start()
+        if synced:
+            loggerService.log('Slash commands synced')
+        else:
+            loggerService.log('Slash commands not synced')
     except Exception as e:
-        loggerService.error(f"Failed to sync commands: {e}")
+        loggerService.log(f'Error while syncing slash commands: {e}')
+    isOnLive.start()
     
 @bot.tree.command(name='live',description='Savoir si Wiibleyde est en live')
 async def live(interaction: discord.Interaction):
@@ -46,14 +48,21 @@ async def live(interaction: discord.Interaction):
     else:
         await interaction.response.send_message("Wiibleyde n'est pas en live",ephemeral=True)
 
+@bot.tree.command(name='set', description="[ADMIN] set config value")
+@commands.has_permissions(administrator=True)
+async def setConfig(interaction: discord.Interaction, key: str, value: str):
+    try:
+        oldValue = configService.getValue(key)
+        configService.setValue(key,value)
+        await interaction.response.send_message(f"Set {key} from {oldValue} to {value}",ephemeral=True)
+    except Exception as e:
+        await interaction.response.send_message(f"Error while setting {key} to {value}: {e}",ephemeral=True)
+
 @tasks.loop(seconds=10)
 async def isOnLive():
     twitchService = TwitchService()
-    if twitchService.isChannelLive():
+    if twitchService.checkIfUserIsStreaming():
         if varSaver.getVar('liveSend'):
-            # get the only one message of the channel and modify it to update the title and other things
-            # the message should be the last of the channel
-            # await bot.get_channel(configService.getTwitchTextChannelId()).fetch_message()
             return
         varSaver.saveVar('liveSend',True)
         embed = discord.Embed(title="Wiibleyde est en live !")
@@ -68,53 +77,16 @@ async def isOnLive():
         await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name="Wiibleyde online !"))
     else:
         if not varSaver.getVar('liveSend'):
+            await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name="pas Wiibleyde"))
             return
         varSaver.saveVar('liveSend',False)
         await bot.get_channel(configService.getTwitchTextChannelId()).purge()
         await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name="pas Wiibleyde"))
 
-@bot.tree.command(name='youtube',description='Dernière vidéo posté sur la chaîne de Wiibleyde')
-async def youtube(interaction: discord.Interaction):
-    youtubeService = YoutubeService(configService.getYoutubeApiKey(),configService.getYoutubeChannel())
-    if youtubeService.hasChannelNewVideo():
-        embed = discord.Embed(title="Nouvelle vidéo !")
-        embed.add_field(name="Lien",value=youtubeService.getChannelNewVideoUrl())
-        embed.add_field(name="Titre",value=youtubeService.getChannelNewVideoTitle())
-        embed.add_field(name="Description",value=f"{youtubeService.getChannelNewVideoDescription()[0:100]}...")
-        embed.set_image(url=youtubeService.getChannelNewVideoThumbnail())
-        embed.set_footer(text="Nouvelle vidéo !")
-        await interaction.response.send_message(embed=embed,ephemeral=True)
-    else:
-        await interaction.response.send_message("Aucune nouvelle vidéo",ephemeral=True)
-
-@tasks.loop(seconds=10)
-async def hasNewYoutubeVideo():
-    youtubeService = YoutubeService()
-    if youtubeService.hasChannelNewVideo():
-        if varSaver.getVar('youtubeSend'):
-            return
-        varSaver.saveVar('youtubeSend',True)
-        embed = discord.Embed(title="Nouvelle vidéo !")
-        embed.add_field(name="Lien",value=youtubeService.getChannelNewVideoUrl())
-        embed.add_field(name="Titre",value=youtubeService.getChannelNewVideoTitle())
-        embed.add_field(name="Description",value=f"{youtubeService.getChannelNewVideoDescription()[0:10]}...")
-        embed.set_image(url=youtubeService.getChannelNewVideoThumbnail())
-        embed.set_footer(text="Nouvelle vidéo !")
-        await bot.get_channel(configService.getYoutubeTextChannelId()).send(embed=embed)
-    else:
-        if not varSaver.getVar('youtubeSend'):
-            return
-        varSaver.saveVar('youtubeSend',False)
-
-@bot.tree.command(name='set', description="[ADMIN] set config value")
-@commands.has_permissions(administrator=True)
-async def setConfig(interaction: discord.Interaction, key: str, value: str):
-    oldValue = configService.getValue(key)
-    configService.setValue(key,value)
-    await interaction.response.send_message(f"Set {key} from {oldValue} to {value}",ephemeral=True)
-
 if __name__ == '__main__':
     args = readArgs()
+    if args.debug:
+        print("Debug mode enabled")
     varSaver = VarSaveService('var.json')
     loggerService = LoggerService('logs.log',args.debug)
     loggerService.log('Bot is starting')
