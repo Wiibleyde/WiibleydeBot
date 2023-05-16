@@ -51,6 +51,9 @@ async def isOnLive():
     twitchService = TwitchService()
     if twitchService.isChannelLive():
         if varSaver.getVar('liveSend'):
+            # get the only one message of the channel and modify it to update the title and other things
+            # the message should be the last of the channel
+            # await bot.get_channel(configService.getTwitchTextChannelId()).fetch_message()
             return
         varSaver.saveVar('liveSend',True)
         embed = discord.Embed(title="Wiibleyde est en live !")
