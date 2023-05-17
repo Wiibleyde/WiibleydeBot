@@ -7,134 +7,67 @@ class TwitchService:
     def __init__(self):
         self.channelName = ConfigService('config.yaml').getTwitchApiKey()
         self.clientId = ConfigService('config.yaml').getTwitchClientId()
+        self.apiKey = ConfigService('config.yaml').getTwitchApiKey()
+
+    def getAccessToken(self):
+        url = 'https://id.twitch.tv/oauth2/token'
+        data = {
+            'client_id': self.clientId,
+            'client_secret': self.apiKey,
+            'grant_type': 'client_credentials'
+        }
+        response = requests.post(url, data=data)
+
+        if response.status_code == 200:
+            json_data = response.json()
+            return json_data['access_token']
+        else:
+            return False
     
     def checkIfUserIsStreaming(self):
-        twitch_api_stream_url = "https://api.twitch.tv/kraken/streams/" + self.channelName + "?client_id=" + self.clientId
-        response = requests.get(twitch_api_stream_url)
+        headers = {
+            "Authorization": f"Bearer {self.getAccessToken()}",
+            "Client-Id": self.clientId
+        }
+        twitch_api_stream_url = f"https://api.twitch.tv/helix/streams"
+        response = requests.get(twitch_api_stream_url, headers=headers)
+        print(response)
+
         if response.status_code == 200:
-            json_data = json.loads(response.text)
-            if json_data['stream'] == None:
-                return False
-            else:
+            json_data = response.json()
+            if json_data["data"]:
                 return True
+            else:
+                return False
         else:
             return False
         
-    def getStreamTitle(self):
-        twitch_api_stream_url = "https://api.twitch.tv/kraken/streams/" + self.channelName + "?client_id=" + self.clientId
-        response = requests.get(twitch_api_stream_url)
-        if response.status_code == 200:
-            json_data = json.loads(response.text)
-            return json_data['stream']['channel']['status']
-        else:
-            return None
-        
-    def getStreamGame(self):
-        twitch_api_stream_url = "https://api.twitch.tv/kraken/streams/" + self.channelName + "?client_id=" + self.clientId
-        response = requests.get(twitch_api_stream_url)
-        if response.status_code == 200:
-            json_data = json.loads(response.text)
-            return json_data['stream']['game']
-        else:
-            return None
-        
-    def getStreamViewers(self):
-        twitch_api_stream_url = "https://api.twitch.tv/kraken/streams/" + self.channelName + "?client_id=" + self.clientId
-        response = requests.get(twitch_api_stream_url)
-        if response.status_code == 200:
-            json_data = json.loads(response.text)
-            return json_data['stream']['viewers']
-        else:
-            return None
-        
-    def getStreamPreview(self):
-        twitch_api_stream_url = "https://api.twitch.tv/kraken/streams/" + self.channelName + "?client_id=" + self.clientId
-        response = requests.get(twitch_api_stream_url)
-        if response.status_code == 200:
-            json_data = json.loads(response.text)
-            return json_data['stream']['preview']['medium']
-        else:
-            return None
-        
-    def getStreamUrl(self):
-        return "https://www.twitch.tv/" + self.channelName
+    def getStreamInfo(self):
+        headers = {
+            "Authorization": f"Bearer {self.getAccessToken()}",
+            "Client-ID": self.clientId
+        }
+        twitch_api_stream_url = f"https://api.twitch.tv/helix/streams"
+        response = requests.get(twitch_api_stream_url, headers=headers)
+        return response.json()['data'][0]
     
-    def getStreamImage(self):
-        return "https://static-cdn.jtvnw.net/previews-ttv/live_user_" + self.channelName + "-640x360.jpg"
+    def getStreamInfoFromId(self, streamId):
+        headers = {
+            "Authorization": f"Bearer {self.getAccessToken()}",
+            "Client-ID": self.clientId
+        }
+        twitch_api_stream_url = f"https://api.twitch.tv/helix/streams"
+        response = requests.get(twitch_api_stream_url, headers=headers)
+        return response.json()['data'][0]
+    
+    def getStreamTitle(self):
+        return self.getStreamInfo()['title']
+    
+    def getStreamViewers(self):
+        return self.getStreamInfo()['viewer_count']
     
     def getStreamThumbnail(self):
-        return "https://static-cdn.jtvnw.net/previews-ttv/live_user_" + self.channelName + "-80x45.jpg"
-    
-    def getStreamLogo(self):
-        return "https://static-cdn.jtvnw.net/jtv_user_pictures/" + self.channelName + "-profile_image-300x300.png"
-    
-    def getStreamBanner(self):
-        return "https://static-cdn.jtvnw.net/jtv_user_pictures/" + self.channelName + "-channel_offline_image-1920x1080.png"
-    
-    def getStreamId(self):
-        twitch_api_stream_url = "https://api.twitch.tv/kraken/streams/" + self.channelName + "?client_id=" + self.clientId
-        response = requests.get(twitch_api_stream_url)
-        if response.status_code == 200:
-            json_data = json.loads(response.text)
-            return json_data['stream']['_id']
-        else:
-            return None
-        
-    def getStreamCreatedAt(self):
-        twitch_api_stream_url = "https://api.twitch.tv/kraken/streams/" + self.channelName + "?client_id=" + self.clientId
-        response = requests.get(twitch_api_stream_url)
-        if response.status_code == 200:
-            json_data = json.loads(response.text)
-            return json_data['stream']['created_at']
-        else:
-            return None
-        
-    def getStreamUpdatedAt(self):
-        twitch_api_stream_url = "https://api.twitch.tv/kraken/streams/" + self.channelName + "?client_id=" + self.clientId
-        response = requests.get(twitch_api_stream_url)
-        if response.status_code == 200:
-            json_data = json.loads(response.text)
-            return json_data['stream']['updated_at']
-        else:
-            return None
-        
-    def getStreamDelay(self):
-        twitch_api_stream_url = "https://api.twitch.tv/kraken/streams/" + self.channelName + "?client_id=" + self.clientId
-        response = requests.get(twitch_api_stream_url)
-        if response.status_code == 200:
-            json_data = json.loads(response.text)
-            return json_data['stream']['delay']
-        else:
-            return None
-        
-    def getStreamChannelId(self):
-        twitch_api_channel_url = "https://api.twitch.tv/kraken/channels/" + self.channelName + "?client_id=" + self.clientId
-        response = requests.get(twitch_api_channel_url)
-        if response.status_code == 200:
-            json_data = json.loads(response.text)
-            return json_data['_id']
-        else:
-            return None
-        
-    def getStreamChannelName(self):
-        return self.channelName
-    
-    def getStreamChannelDisplayName(self):
-        twitch_api_channel_url = "https://api.twitch.tv/kraken/channels/" + self.channelName + "?client_id=" + self.clientId
-        response = requests.get(twitch_api_channel_url)
-        if response.status_code == 200:
-            json_data = json.loads(response.text)
-            return json_data['display_name']
-        else:
-            return None
-        
-    def getStreamChannelGame(self):
-        twitch_api_channel_url = "https://api.twitch.tv/kraken/channels/" + self.channelName + "?client_id=" + self.clientId
-        response = requests.get(twitch_api_channel_url)
-        if response.status_code == 200:
-            json_data = json.loads(response.text)
-            return json_data['game']
-        else:
-            return None
-        
-        
+        return self.getStreamInfo()['thumbnail_url']
+
+    def getStreamPreview(self):
+        return self.getStreamInfo()['thumbnail_url'].replace('{width}', '1920').replace('{height}', '1080')

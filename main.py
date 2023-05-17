@@ -68,7 +68,7 @@ async def isOnLive():
         embed = discord.Embed(title="Wiibleyde est en live !")
         embed.add_field(name="Lien",value=f"https://www.twitch.tv/{configService.getTwitchChannel()}")
         embed.add_field(name="Titre",value=twitchService.getStreamTitle())
-        embed.add_field(name="Jeu",value=twitchService.getStreamGame())
+        embed.add_field(name="Jeu",value=twitchService.getStreamGameName())
         embed.add_field(name="Viewers",value=twitchService.getStreamViewers())
         embed.set_thumbnail(url=twitchService.getStreamThumbnail())
         embed.set_image(url=twitchService.getStreamPreview())
